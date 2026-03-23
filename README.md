@@ -5,7 +5,7 @@
 ![Project Banner](images/dashboard_overview.jpg)
 
 [![Power BI Dashboard](https://img.shields.io/badge/Power%20BI-Live%20Dashboard-F2C811?style=for-the-badge&logo=powerbi&logoColor=black)](https://app.powerbi.com/view?r=eyJrIjoiNjczMDg5ZDAtNjRkNC00ODE5LTk0YTgtZDJmOGExNmJjYjA3IiwidCI6IjIyNjgyN2Q2LWE5ZDAtNDcwZC04YzE1LWIxNDZiMDE5MmQ1MSIsImMiOjh9)
-[![HTML Report](https://img.shields.io/badge/HTML-View%20Report-E34F26?style=for-the-badge&logo=html5&logoColor=white)](./report/africa_labour_dashboard.html)
+[![HTML Report](https://img.shields.io/badge/HTML-View%20Report-E34F26?style=for-the-badge&logo=html5&logoColor=white)](https://philipgloria.github.io/InsightHer_Africa_Unemployment_Analysis/)
 
 **InsightHer** · Women Techster Bootcamp 5.0  
 *A merge of Data Analysis and Technical Project Management Learning Track*
@@ -190,7 +190,7 @@ AI tools are integrated to enhance the depth of analysis:
 | Resource | Link |
 |---|---|
 | 📊 Power BI Live Dashboard | [Click to View](https://app.powerbi.com/view?r=eyJrIjoiNjczMDg5ZDAtNjRkNC00ODE5LTk0YTgtZDJmOGExNmJjYjA3IiwidCI6IjIyNjgyN2Q2LWE5ZDAtNDcwZC04YzE1LWIxNDZiMDE5MmQ1MSIsImMiOjh9) |
-| 🌐 HTML Report | [unemployment_africa_report.html](./report/africa_labour_dashboard.html) |
+| 🌐 HTML Report | [Unemployment Africa Report](https://philipgloria.github.io/InsightHer_Africa_Unemployment_Analysis/) |
 
 ---
 
