@@ -189,8 +189,7 @@ AI tools are integrated to enhance the depth of analysis:
 
 | Resource | Link |
 |---|---|
-| 📊 Power BI Live Dashboard | [Click to View](https://app.powerbi.com/view?r=eyJrIjoiNjczMDg5ZDAtNjRkNC00ODE5LTk0YTgtZDJmOGExNmJjYjA3IiwidCI6IjIyNjgyN2Q2LWE5ZDAtNDcwZC04YzE1LWIxNDZiMDE5MmQ
-1MSIsImMiOjh9) |
+| 📊 Power BI Live Dashboard | [Click to View](https://app.powerbi.com/view?r=eyJrIjoiNjczMDg5ZDAtNjRkNC00ODE5LTk0YTgtZDJmOGExNmJjYjA3IiwidCI6IjIyNjgyN2Q2LWE5ZDAtNDcwZC04YzE1LWIxNDZiMDE5MmQ1MSIsImMiOjh9) |
 | 🌐 HTML Report | [unemployment_africa_report.html](./report/africa_labour_dashboard.html) |
 
 ---
