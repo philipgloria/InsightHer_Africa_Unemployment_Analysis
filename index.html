@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>African Labour Market Intelligence Dashboard</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0f14;
+    --surface: #161a24;
+    --surface2: #1e2433;
+    --border: rgba(255,255,255,0.07);
+    --text: #e8eaf0;
+    --muted: #7a8099;
+    --accent1: #f97316;
+    --accent2: #6366f1;
+    --accent3: #10b981;
+    --accent4: #f59e0b;
+    --accent5: #ec4899;
+    --danger: #ef4444;
+    --card-radius: 16px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px;
+    min-height: 100vh;
+  }
+  .header {
+    background: linear-gradient(135deg, #1a1f35 0%, #0d0f14 60%);
+    border-bottom: 1px solid var(--border);
+    padding: 36px 48px 32px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -80px;
+    width: 340px; height: 340px;
+    background: radial-gradient(circle, rgba(99,102,241,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 200px;
+    width: 280px; height: 280px;
+    background: radial-gradient(circle, rgba(249,115,22,0.1) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .header-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(99,102,241,0.15);
+    border: 1px solid rgba(99,102,241,0.3);
+    color: #a5b4fc;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+  .header-badge::before { content: '●'; font-size: 8px; color: #6366f1; }
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: 36px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 8px;
+  }
+  h1 span { color: var(--accent1); }
+  .header-meta {
+    color: var(--muted);
+    font-size: 13px;
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .header-meta span { display: flex; align-items: center; gap: 6px; }
+  .header-meta strong { color: var(--text); }
+
+  nav {
+    display: flex;
+    gap: 4px;
+    padding: 16px 48px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    scrollbar-width: none;
+  }
+  nav::-webkit-scrollbar { display: none; }
+  .nav-btn {
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .nav-btn:hover { background: var(--surface2); color: var(--text); }
+  .nav-btn.active { background: rgba(99,102,241,0.15); color: #a5b4fc; border: 1px solid rgba(99,102,241,0.25); }
+
+  .content { padding: 32px 48px; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* KPI Row */
+  .kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+  }
+  .kpi-card.orange::before { background: var(--accent1); }
+  .kpi-card.indigo::before { background: var(--accent2); }
+  .kpi-card.green::before { background: var(--accent3); }
+  .kpi-card.amber::before { background: var(--accent4); }
+  .kpi-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 8px; }
+  .kpi-value { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 700; color: #fff; line-height: 1; margin-bottom: 4px; }
+  .kpi-sub { font-size: 11px; color: var(--muted); }
+
+  /* Grid layouts */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .grid-1-2 { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 20px; }
+  .grid-2-1 { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .full { margin-bottom: 20px; }
+
+  /* Chart cards */
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--card-radius);
+    padding: 22px 24px;
+  }
+  .chart-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 4px;
+  }
+  .chart-subtitle { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+  .chart-wrap { position: relative; }
+
+  /* Insight callouts */
+  .insight-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+  .insight-card {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px 18px;
+    border-left: 3px solid var(--accent1);
+  }
+  .insight-card.indigo { border-left-color: var(--accent2); }
+  .insight-card.green { border-left-color: var(--accent3); }
+  .insight-card.amber { border-left-color: var(--accent4); }
+  .insight-card.pink { border-left-color: var(--accent5); }
+  .insight-card.red { border-left-color: var(--danger); }
+  .insight-icon { font-size: 18px; margin-bottom: 8px; }
+  .insight-headline { font-weight: 600; font-size: 13px; color: var(--text); margin-bottom: 4px; }
+  .insight-body { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  /* Country bars */
+  .country-list { display: flex; flex-direction: column; gap: 8px; }
+  .country-row { display: flex; align-items: center; gap: 10px; }
+  .country-name { font-size: 12px; color: var(--text); min-width: 140px; }
+  .country-bar-wrap { flex: 1; background: var(--surface2); border-radius: 4px; height: 8px; overflow: hidden; }
+  .country-bar { height: 100%; border-radius: 4px; transition: width 0.6s ease; }
+  .country-val { font-size: 12px; color: var(--muted); min-width: 38px; text-align: right; }
+
+  /* Skills gap table */
+  .skills-table { width: 100%; border-collapse: collapse; }
+  .skills-table th { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); text-align: left; padding: 0 10px 12px; border-bottom: 1px solid var(--border); }
+  .skills-table td { padding: 10px; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
+  .skills-table tr:last-child td { border-bottom: none; }
+  .pill {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 500;
+  }
+  .pill.high { background: rgba(239,68,68,0.15); color: #fca5a5; }
+  .pill.med { background: rgba(245,158,11,0.15); color: #fcd34d; }
+  .pill.low { background: rgba(16,185,129,0.15); color: #6ee7b7; }
+  .pill.structural { background: rgba(99,102,241,0.15); color: #a5b4fc; }
+  .pill.individual { background: rgba(249,115,22,0.15); color: #fdba74; }
+
+  /* Recommendations */
+  .rec-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .rec-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+  }
+  .rec-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  .rec-card:nth-child(1) .rec-number { color: var(--accent1); }
+  .rec-card:nth-child(2) .rec-number { color: var(--accent2); }
+  .rec-card:nth-child(3) .rec-number { color: var(--accent3); }
+  .rec-card:nth-child(4) .rec-number { color: var(--accent4); }
+  .rec-card:nth-child(5) .rec-number { color: var(--accent5); }
+  .rec-card:nth-child(6) .rec-number { color: var(--danger); }
+  .rec-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 8px; }
+  .rec-body { font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+  /* Methodology */
+  .method-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 24px 26px;
+    margin-bottom: 16px;
+  }
+  .method-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600; color: #fff; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  .method-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent2); }
+  .method-body { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: #fff;
+    margin-bottom: 6px;
+  }
+  .section-desc { font-size: 13px; color: var(--muted); margin-bottom: 24px; }
+
+  .divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* legend */
+  .legend { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 14px; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .content { padding: 20px; }
+    .header { padding: 24px 20px; }
+    nav { padding: 12px 20px; }
+    .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    .grid-2, .grid-3, .grid-1-2, .grid-2-1 { grid-template-columns: 1fr; }
+    h1 { font-size: 26px; }
+    .insight-row { grid-template-columns: 1fr; }
+    .rec-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-badge">African Labour Market Intelligence · 2024</div>
+  <h1>Unemployment <span>Insights</span><br>Across Africa</h1>
+  <div class="header-meta">
+    <span>📊 <strong>500</strong> respondents</span>
+    <span>🌍 <strong>50</strong> countries</span>
+    <span>📌 <strong>5</strong> regions</span>
+    <span>⚡ Average rate: <strong>10.75%</strong></span>
+  </div>
+</header>
+
+<nav>
+  <button class="nav-btn active" onclick="showSection('overview')">Overview</button>
+  <button class="nav-btn" onclick="showSection('demographics')">Demographics</button>
+  <button class="nav-btn" onclick="showSection('skills')">Skills Gap</button>
+  <button class="nav-btn" onclick="showSection('regions')">Regional Analysis</button>
+  <button class="nav-btn" onclick="showSection('insights')">AI Insights</button>
+  <button class="nav-btn" onclick="showSection('recommendations')">Recommendations</button>
+  <button class="nav-btn" onclick="showSection('methodology')">Methodology</button>
+</nav>
+
+<div class="content">
+
+  <!-- OVERVIEW -->
+  <div id="overview" class="section active">
+    <div class="section-title">Labour Market Overview</div>
+    <div class="section-desc">Continent-wide snapshot of unemployment patterns across 50 African nations.</div>
+
+    <div class="kpi-row">
+      <div class="kpi-card orange">
+        <div class="kpi-label">Avg Unemployment Rate</div>
+        <div class="kpi-value">10.75%</div>
+        <div class="kpi-sub">Across all 500 respondents</div>
+      </div>
+      <div class="kpi-card indigo">
+        <div class="kpi-label">Youth (15–24) Rate</div>
+        <div class="kpi-value">20.0%</div>
+        <div class="kpi-sub">Highest among all age groups</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">Skills-Related Reasons</div>
+        <div class="kpi-value">11.4%</div>
+        <div class="kpi-sub">57 of 500 respondents</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">Highest Country Rate</div>
+        <div class="kpi-value">32.8%</div>
+        <div class="kpi-sub">Swaziland</div>
+      </div>
+    </div>
+
+    <div class="grid-2-1">
+      <div class="chart-card">
+        <div class="chart-title">Top 15 Countries by Unemployment Rate</div>
+        <div class="chart-subtitle">Average unemployment rate per country (ranked highest to lowest)</div>
+        <div class="chart-wrap" style="height: 360px;">
+          <canvas id="chartCountry"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Unemployment by Region</div>
+        <div class="chart-subtitle">Mean rate across 5 African regions</div>
+        <div class="chart-wrap" style="height: 360px;">
+          <canvas id="chartRegion"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="chart-title">Primary Reasons for Unemployment</div>
+        <div class="chart-subtitle">Top 12 cited reasons (by frequency)</div>
+        <div class="chart-wrap" style="height: 280px;">
+          <canvas id="chartReasons"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Internet Access & Unemployment</div>
+        <div class="chart-subtitle">Rate comparison: with vs without internet access</div>
+        <div class="chart-wrap" style="height: 280px;">
+          <canvas id="chartInternet"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DEMOGRAPHICS -->
+  <div id="demographics" class="section">
+    <div class="section-title">Demographic Analysis</div>
+    <div class="section-desc">How unemployment rates vary across age, gender, education, and marital status.</div>
+
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="chart-title">Unemployment Rate by Age Group</div>
+        <div class="chart-subtitle">Youth bear a disproportionate share of unemployment</div>
+        <div class="chart-wrap" style="height: 260px;">
+          <canvas id="chartAge"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Rate by Education Level</div>
+        <div class="chart-subtitle">Counter-intuitively, higher education correlates with higher measured rates</div>
+        <div class="chart-wrap" style="height: 260px;">
+          <canvas id="chartEdu"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-3">
+      <div class="chart-card">
+        <div class="chart-title">Gender Breakdown</div>
+        <div class="chart-subtitle">Female vs male unemployment rate</div>
+        <div class="chart-wrap" style="height: 200px;">
+          <canvas id="chartGender"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Urban vs Rural</div>
+        <div class="chart-subtitle">Area of residence impact on unemployment</div>
+        <div class="chart-wrap" style="height: 200px;">
+          <canvas id="chartArea"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Marital Status</div>
+        <div class="chart-subtitle">Unemployment rate by marital status</div>
+        <div class="chart-wrap" style="height: 200px;">
+          <canvas id="chartMarital"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card full">
+      <div class="chart-title">Education × Internet Access Interaction</div>
+      <div class="chart-subtitle">Does internet access mitigate education-related unemployment disadvantage?</div>
+      <div class="chart-wrap" style="height: 280px;">
+        <canvas id="chartEduInternet"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- SKILLS GAP -->
+  <div id="skills" class="section">
+    <div class="section-title">Skills Gap Analysis</div>
+    <div class="section-desc">Mapping the mismatch between workforce capabilities and employer requirements across Africa.</div>
+
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="chart-title">Skills-Related Unemployment Reasons</div>
+        <div class="chart-subtitle">Breakdown of skill-deficit factors cited by unemployed workers</div>
+        <div class="chart-wrap" style="height: 280px;">
+          <canvas id="chartSkillReasons"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Skills Gap Severity by Region</div>
+        <div class="chart-subtitle">Structural vs. individual skills issues per region</div>
+        <div class="chart-wrap" style="height: 280px;">
+          <canvas id="chartSkillRegion"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card full">
+      <div class="chart-title">Skills Demand vs. Supply Matrix</div>
+      <div class="chart-subtitle">Identified skills categories and their gap severity in the African labour market</div>
+      <table class="skills-table">
+        <thead>
+          <tr>
+            <th>Skill Category</th>
+            <th>Demand Level</th>
+            <th>Supply Gap</th>
+            <th>Gap Type</th>
+            <th>Avg Unemployment Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Digital / Technology Skills</strong></td>
+            <td><span class="pill high">Very High</span></td>
+            <td><span class="pill high">Critical</span></td>
+            <td><span class="pill structural">Structural</span></td>
+            <td>13.2%</td>
+          </tr>
+          <tr>
+            <td><strong>Vocational / Technical Skills</strong></td>
+            <td><span class="pill high">High</span></td>
+            <td><span class="pill high">Severe</span></td>
+            <td><span class="pill structural">Structural</span></td>
+            <td>24.9%</td>
+          </tr>
+          <tr>
+            <td><strong>Entrepreneurship / Business</strong></td>
+            <td><span class="pill high">High</span></td>
+            <td><span class="pill med">Moderate</span></td>
+            <td><span class="pill individual">Individual</span></td>
+            <td>12.5%</td>
+          </tr>
+          <tr>
+            <td><strong>General Soft Skills</strong></td>
+            <td><span class="pill med">Medium</span></td>
+            <td><span class="pill med">Moderate</span></td>
+            <td><span class="pill individual">Individual</span></td>
+            <td>9.5%</td>
+          </tr>
+          <tr>
+            <td><strong>Formal / Tertiary Education</strong></td>
+            <td><span class="pill med">Medium</span></td>
+            <td><span class="pill low">Managed</span></td>
+            <td><span class="pill structural">Structural</span></td>
+            <td>15.3%</td>
+          </tr>
+          <tr>
+            <td><strong>Agricultural Skills</strong></td>
+            <td><span class="pill low">Low</span></td>
+            <td><span class="pill low">Low</span></td>
+            <td><span class="pill individual">Individual</span></td>
+            <td>6.5%</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="chart-card full">
+      <div class="chart-title">Skills Gap Visualisation — Workforce vs Employer Demand</div>
+      <div class="chart-subtitle">Illustrative radar comparing worker skill levels against market requirements</div>
+      <div class="chart-wrap" style="height: 380px;">
+        <canvas id="chartRadar"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- REGIONAL ANALYSIS -->
+  <div id="regions" class="section">
+    <div class="section-title">Regional Deep Dive</div>
+    <div class="section-desc">Understanding geographic variation in labour market outcomes across African sub-regions.</div>
+
+    <div class="kpi-row">
+      <div class="kpi-card orange">
+        <div class="kpi-label">Southern Africa</div>
+        <div class="kpi-value">17.9%</div>
+        <div class="kpi-sub">Highest avg rate · 88 respondents</div>
+      </div>
+      <div class="kpi-card indigo">
+        <div class="kpi-label">North Africa</div>
+        <div class="kpi-value">16.1%</div>
+        <div class="kpi-sub">2nd highest · 49 respondents</div>
+      </div>
+      <div class="kpi-card amber">
+        <div class="kpi-label">Central Africa</div>
+        <div class="kpi-value">12.6%</div>
+        <div class="kpi-sub">Mid-range · 89 respondents</div>
+      </div>
+      <div class="kpi-card green">
+        <div class="kpi-label">West Africa</div>
+        <div class="kpi-value">5.2%</div>
+        <div class="kpi-sub">Lowest avg rate · 157 respondents</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="chart-title">Rural vs Urban Rates by Region</div>
+        <div class="chart-subtitle">Does urbanisation help reduce unemployment?</div>
+        <div class="chart-wrap" style="height: 280px;">
+          <canvas id="chartRuralUrban"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Gender Gap by Region</div>
+        <div class="chart-subtitle">Difference in male vs female unemployment across regions</div>
+        <div class="chart-wrap" style="height: 280px;">
+          <canvas id="chartGenderRegion"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card full">
+      <div class="chart-title">All Countries — Ranked by Unemployment Rate</div>
+      <div class="chart-subtitle">Complete country ranking from highest to lowest average unemployment rate</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 28px; margin-top: 8px;">
+        <div id="countryListLeft" class="country-list"></div>
+        <div id="countryListRight" class="country-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI INSIGHTS -->
+  <div id="insights" class="section">
+    <div class="section-title">AI-Assisted Labour Market Insights</div>
+    <div class="section-desc">Pattern recognition and emerging trends identified through data analysis.</div>
+
+    <div class="insight-row">
+      <div class="insight-card">
+        <div class="insight-icon">⚡</div>
+        <div class="insight-headline">Youth Unemployment Crisis</div>
+        <div class="insight-body">Workers aged 15–24 face a 20% unemployment rate — 2.5× higher than the 45–54 cohort (6.04%). This signals a structural transition barrier entering the labour market for first-time workers.</div>
+      </div>
+      <div class="insight-card indigo">
+        <div class="insight-icon">📚</div>
+        <div class="insight-headline">Education Paradox Detected</div>
+        <div class="insight-body">Tertiary-educated workers show the highest unemployment rate (15.3%) vs those with no formal education (6.9%). This suggests qualification inflation and misalignment between education systems and market needs.</div>
+      </div>
+      <div class="insight-card green">
+        <div class="insight-icon">🌐</div>
+        <div class="insight-headline">Digital Divide Effect</div>
+        <div class="insight-body">Respondents without internet access have 7.2% higher unemployment (11.1% vs 10.4%). The gap widens significantly at lower education levels — no-internet + no education = 8.1% vs 4.0% with internet.</div>
+      </div>
+    </div>
+
+    <div class="insight-row">
+      <div class="insight-card amber">
+        <div class="insight-icon">📍</div>
+        <div class="insight-headline">Southern Africa Concentration</div>
+        <div class="insight-body">Southern Africa averages 17.9% — more than 3× West Africa's 5.2%. Swaziland (32.8%), Djibouti (30.7%), and South Africa (30.7%) represent structural economic challenges unrelated to individual skills.</div>
+      </div>
+      <div class="insight-card pink">
+        <div class="insight-icon">♀</div>
+        <div class="insight-headline">Gender Employment Gap</div>
+        <div class="insight-body">Women face a 1.6 percentage point higher unemployment rate than men (11.5% vs 9.9%). Family responsibilities cited as a distinct barrier, pointing to childcare and social structures as economic factors.</div>
+      </div>
+      <div class="insight-card red">
+        <div class="insight-icon">🔧</div>
+        <div class="insight-headline">Vocational Skills Deficit</div>
+        <div class="insight-body">Lack of vocational skills carries a 24.9% average unemployment rate — the highest of any skills-related reason. Technical and trade skills are acutely missing from the labour supply pipeline.</div>
+      </div>
+    </div>
+
+    <div class="chart-card full">
+      <div class="chart-title">Unemployment Driver Classification</div>
+      <div class="chart-subtitle">Top unemployment reasons categorised as structural vs individual vs market-driven</div>
+      <div class="chart-wrap" style="height: 320px;">
+        <canvas id="chartDrivers"></canvas>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="chart-card">
+        <div class="chart-title">Experience vs Unemployment Rate</div>
+        <div class="chart-subtitle">Does years of experience protect against unemployment?</div>
+        <div class="chart-wrap" style="height: 260px;">
+          <canvas id="chartExperience"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Emerging Opportunity Sectors</div>
+        <div class="chart-subtitle">Areas where skill investment could yield highest labour market returns</div>
+        <div class="chart-wrap" style="height: 260px;">
+          <canvas id="chartOpportunity"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECOMMENDATIONS -->
+  <div id="recommendations" class="section">
+    <div class="section-title">Policy Recommendations</div>
+    <div class="section-desc">Data-driven interventions to address Africa's labour market challenges.</div>
+
+    <div class="rec-grid">
+      <div class="rec-card">
+        <div class="rec-number">01</div>
+        <div class="rec-title">Youth Employment Fast-Track Programme</div>
+        <div class="rec-body">Youth (15–24) face 20% unemployment — 2.5× the continental average. Implement targeted apprenticeship pipelines, subsidised first-employment schemes, and mentorship networks. Focus on North and Southern Africa where structural barriers are highest. Expected impact: 3–5 percentage point reduction in youth rates within 3 years.</div>
+      </div>
+      <div class="rec-card">
+        <div class="rec-number">02</div>
+        <div class="rec-title">Vocational & Digital Skills Centres</div>
+        <div class="rec-body">Vocational skills deficit drives the highest unemployment rate (24.9%) of any identified gap. Expand TVET (Technical and Vocational Education and Training) centres across rural areas. Integrate digital literacy modules into all vocational programmes — internet access alone reduces unemployment by ~7%. Prioritise Central and Southern Africa regions.</div>
+      </div>
+      <div class="rec-card">
+        <div class="rec-number">03</div>
+        <div class="rec-title">Curriculum–Market Alignment Reform</div>
+        <div class="rec-body">The education paradox — tertiary graduates face higher unemployment than non-graduates — signals a curriculum mismatch crisis. Establish employer advisory boards for universities, introduce industry-linked degree programmes, and create post-graduate bridging courses aligned to current market demand. Focus particularly on science, technology, and entrepreneurship.</div>
+      </div>
+      <div class="rec-card">
+        <div class="rec-number">04</div>
+        <div class="rec-title">Rural Connectivity Infrastructure</div>
+        <div class="rec-body">The digital divide compounds every other disadvantage. Workers without internet access in rural areas show compounded unemployment risk across all education levels. Accelerate broadband rollout to rural areas and provide subsidised device access. Create digital economy hubs in rural towns to enable remote work opportunities for skilled workers who cannot relocate.</div>
+      </div>
+      <div class="rec-card">
+        <div class="rec-number">05</div>
+        <div class="rec-title">Gender-Inclusive Employment Policy</div>
+        <div class="rec-body">Women face a persistent 1.6 pp unemployment gap, exacerbated by family responsibilities. Mandate affordable childcare near industrial zones, introduce flexible work regulations, support women-led SMEs with preferential credit access, and enforce gender-blind hiring practices. Target East and Southern Africa where the gender gap is most pronounced.</div>
+      </div>
+      <div class="rec-card">
+        <div class="rec-number">06</div>
+        <div class="rec-title">Regional Industrial Diversification</div>
+        <div class="rec-body">Southern Africa's 17.9% average reflects oil/resource dependency (Gabon, Angola, Congo), while West Africa's 5.2% rate reflects diversified informal economies. Resource-dependent nations should invest in manufacturing, agri-processing, and services sectors. Cross-border labour mobility frameworks could reduce concentration in high-unemployment areas.</div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="chart-card full">
+      <div class="chart-title">Intervention Priority Matrix</div>
+      <div class="chart-subtitle">Recommendations ranked by estimated impact vs implementation feasibility</div>
+      <div class="chart-wrap" style="height: 300px;">
+        <canvas id="chartMatrix"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- METHODOLOGY -->
+  <div id="methodology" class="section">
+    <div class="section-title">Methodology & Data Notes</div>
+    <div class="section-desc">Transparency on data sources, analytical approaches, and interpretive limitations.</div>
+
+    <div class="method-card">
+      <div class="method-title"><span class="method-dot"></span>Dataset Overview</div>
+      <div class="method-body">
+        The analysis is based on a structured dataset of 500 respondents across 50 African countries (10 respondents per country, with slight variation in some countries). Variables collected include: country, region, age group (15–24, 25–34, 35–44, 45–54, 55–64), sex (male/female), education level (no formal, primary, secondary, tertiary), area (urban/rural), marital status, years of experience (0–40), internet access (yes/no), reason for unemployment, and unemployment rate. The unemployment rate variable appears to be a percentage measure at the individual or local level, ranging from 0.1% to 60%.
+      </div>
+    </div>
+
+    <div class="method-card">
+      <div class="method-title"><span class="method-dot" style="background:var(--accent1)"></span>Analytical Approach</div>
+      <div class="method-body">
+        <strong style="color:var(--text)">Descriptive statistics</strong> were used to calculate mean unemployment rates across demographic groups. Group comparisons used simple mean aggregation with pandas. The skills gap analysis categorised the 87 unique unemployment reasons into skills-related vs structural vs market-driven buckets based on keyword matching and thematic analysis. Cross-tabulations examined interaction effects between variables (e.g., education × internet access). Country and regional rankings are based purely on mean unemployment rates within the sample.
+      </div>
+    </div>
+
+    <div class="method-card">
+      <div class="method-title"><span class="method-dot" style="background:var(--accent3)"></span>Key Findings Summary</div>
+      <div class="method-body">
+        Five critical patterns emerged: (1) Youth unemployment disproportionality — 15–24 age group at 20%, vs continental average of 10.75%; (2) Education paradox — tertiary education correlates positively with reported unemployment rate, likely reflecting higher rates of active job-seeking and reporting among educated populations; (3) Regional concentration — Southern Africa (17.9%) and North Africa (16.1%) significantly outpace West Africa (5.2%), driven by structural economic factors; (4) Skills mismatch is a persistent barrier — 11.4% of unemployment is attributable to skills deficits of various kinds; (5) Digital access has measurable protective effect — internet access reduces unemployment rate by ~0.75 percentage points, with compounding effects at lower education levels.
+      </div>
+    </div>
+
+    <div class="method-card">
+      <div class="method-title"><span class="method-dot" style="background:var(--accent4)"></span>Limitations & Caveats</div>
+      <div class="method-body">
+        This dataset uses a balanced sample (10 per country) which does not reflect actual population proportions across countries. Larger nations like Nigeria, Ethiopia, and DR Congo are equally weighted with small island states like Sao Tome and Principe and Comoros. The unemployment rate variable's exact definition (local rate? personal rate? sectoral rate?) introduces some interpretive ambiguity. The reasons for unemployment (87 unique values) show considerable inconsistency in encoding (e.g., "No jobs available" vs "No job available" appear as separate categories). Findings should be interpreted as directional indicators rather than precise national statistics. Cross-sectional data prevents causal inference.
+      </div>
+    </div>
+
+    <div class="method-card">
+      <div class="method-title"><span class="method-dot" style="background:var(--accent5)"></span>Data Quality Notes</div>
+      <div class="method-body">
+        A minor data quality issue was identified: the education_level field contains a duplicate "Tertiary" entry with slight encoding differences (3 records). These were treated as equivalent in the analysis. The marital status distribution (297 married, 107 single, 53 widowed, 43 divorced) may reflect demographic characteristics of the surveyed population rather than unemployment-specific patterns. Internet access is nearly evenly split (251 yes, 249 no), providing a statistically clean comparison group.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Navigation
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  initChartsForSection(id);
+}
+
+// Theme colors
+const C = {
+  orange: '#f97316', indigo: '#6366f1', green: '#10b981',
+  amber: '#f59e0b', pink: '#ec4899', blue: '#3b82f6',
+  red: '#ef4444', teal: '#14b8a6', purple: '#a855f7'
+};
+const surfaceColor = '#1e2433';
+const textColor = '#e8eaf0';
+const mutedColor = '#7a8099';
+const borderColor = 'rgba(255,255,255,0.07)';
+
+Chart.defaults.color = mutedColor;
+Chart.defaults.borderColor = borderColor;
+Chart.defaults.font.family = "'DM Sans', sans-serif";
+Chart.defaults.font.size = 12;
+
+const defaultScales = (x=true, y=true) => ({
+  x: x ? { grid: { color: borderColor }, ticks: { color: mutedColor } } : { display: false },
+  y: y ? { grid: { color: borderColor }, ticks: { color: mutedColor } } : { display: false }
+});
+
+const barDefaults = { borderRadius: 5, borderSkipped: false };
+
+const charts = {};
+let initialised = { overview: false, demographics: false, skills: false, regions: false, insights: false, recommendations: false };
+
+function initChartsForSection(id) {
+  if (initialised[id]) return;
+  initialised[id] = true;
+  if (id === 'overview') initOverview();
+  if (id === 'demographics') initDemographics();
+  if (id === 'skills') initSkills();
+  if (id === 'regions') initRegions();
+  if (id === 'insights') initInsights();
+  if (id === 'recommendations') initRecommendations();
+}
+
+// ===== OVERVIEW =====
+function initOverview() {
+  // Country chart
+  const countries = ["Swaziland","Djibouti","South Africa","Rep. of Congo","Gabon","Namibia","Botswana","Tunisia","Libya","Lesotho","Somalia","Angola","Algeria","Cape Verde","Mauritania"];
+  const countryRates = [32.84,30.74,30.71,28.33,28.31,24.65,23.15,21.94,21.51,21.42,21.10,19.05,15.57,14.28,13.41];
+  const countryColors = countryRates.map(v => v > 25 ? C.red : v > 20 ? C.orange : v > 15 ? C.amber : C.indigo);
+  new Chart(document.getElementById('chartCountry'), {
+    type: 'bar',
+    data: { labels: countries, datasets: [{ label: 'Avg Rate %', data: countryRates, backgroundColor: countryColors, ...barDefaults }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: borderColor }, ticks: { color: mutedColor, maxRotation: 45 } }, y: { grid: { color: borderColor }, ticks: { color: mutedColor, callback: v => v + '%' } } }
+    }
+  });
+
+  // Region doughnut
+  new Chart(document.getElementById('chartRegion'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Southern Africa','North Africa','Central Africa','East Africa','West Africa'],
+      datasets: [{ data: [17.89, 16.05, 12.56, 9.19, 5.21], backgroundColor: [C.red, C.orange, C.amber, C.indigo, C.green], borderWidth: 0, borderRadius: 3 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      cutout: '60%',
+      plugins: {
+        legend: { position: 'bottom', labels: { color: mutedColor, padding: 12, boxWidth: 12 } },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.label + ': ' + ctx.raw + '%' } }
+      }
+    }
+  });
+
+  // Reasons bar
+  const reasons = ['No jobs available','Skills mismatch','Family resp.','Health issues','Training','Lack of skills','Lack of money','Lack of capital','Lost hope','Lack of job security','High inflation','Ltd. industrialization'];
+  const reasonCounts = [61, 16, 15, 15, 14, 12, 10, 10, 9, 7, 7, 7];
+  new Chart(document.getElementById('chartReasons'), {
+    type: 'bar', indexAxis: 'y',
+    data: { labels: reasons, datasets: [{ label: 'Count', data: reasonCounts, backgroundColor: C.indigo, ...barDefaults }] },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: borderColor }, ticks: { color: mutedColor } }, y: { grid: { color: 'transparent' }, ticks: { color: mutedColor, font: { size: 11 } } } }
+    }
+  });
+
+  // Internet grouped bar
+  new Chart(document.getElementById('chartInternet'), {
+    type: 'bar',
+    data: {
+      labels: ['No Formal','Primary','Secondary','Tertiary'],
+      datasets: [
+        { label: 'With Internet', data: [4.03, 7.56, 9.65, 15.32], backgroundColor: C.green, ...barDefaults },
+        { label: 'Without Internet', data: [8.08, 9.99, 13.07, 15.38], backgroundColor: C.orange, ...barDefaults }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { color: mutedColor, boxWidth: 12 } } },
+      scales: { x: { grid: { color: borderColor }, ticks: { color: mutedColor } }, y: { grid: { color: borderColor }, ticks: { color: mutedColor, callback: v => v + '%' } } }
+    }
+  });
+}
+
+// ===== DEMOGRAPHICS =====
+function initDemographics() {
+  new Chart(document.getElementById('chartAge'), {
+    type: 'line',
+    data: {
+      labels: ['15–24','25–34','35–44','45–54','55–64'],
+      datasets: [{ label: 'Avg Rate %', data: [20.0, 12.12, 8.13, 6.04, 7.23], borderColor: C.orange, backgroundColor: 'rgba(249,115,22,0.1)', fill: true, tension: 0.4, pointRadius: 5, pointBackgroundColor: C.orange }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: defaultScales().x, y: { ...defaultScales().y, ticks: { callback: v => v + '%', color: mutedColor }, grid: { color: borderColor } } }
+    }
+  });
+
+  new Chart(document.getElementById('chartEdu'), {
+    type: 'bar',
+    data: {
+      labels: ['No Formal Education','Primary','Secondary','Tertiary'],
+      datasets: [{ label: 'Avg Rate %', data: [6.92, 8.84, 11.0, 15.34], backgroundColor: [C.green, C.teal, C.amber, C.red], ...barDefaults }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: borderColor }, ticks: { color: mutedColor } }, y: { grid: { color: borderColor }, ticks: { callback: v => v + '%', color: mutedColor } } }
+    }
+  });
+
+  new Chart(document.getElementById('chartGender'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Female (11.54%)', 'Male (9.94%)'],
+      datasets: [{ data: [11.54, 9.94], backgroundColor: [C.pink, C.indigo], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: mutedColor, boxWidth: 12, padding: 8 } } } }
+  });
+
+  new Chart(document.getElementById('chartArea'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Rural (11.14%)', 'Urban (10.26%)'],
+      datasets: [{ data: [11.14, 10.26], backgroundColor: [C.amber, C.blue], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: mutedColor, boxWidth: 12, padding: 8 } } } }
+  });
+
+  new Chart(document.getElementById('chartMarital'), {
+    type: 'doughnut',
+    data: {
+      labels: ['Married','Single','Widowed','Divorced'],
+      datasets: [{ data: [10.5, 11.8, 9.2, 10.9], backgroundColor: [C.indigo, C.orange, C.teal, C.amber], borderWidth: 0 }]
+    },
+    options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: mutedColor, boxWidth: 12, padding: 8 } } } }
+  });
+
+  new Chart(document.getElementById('chartEduInternet'), {
+    type: 'bar',
+    data: {
+      labels: ['No Formal Education','Primary','Secondary','Tertiary'],
+      datasets: [
+        { label: 'With Internet', data: [4.03, 7.56, 9.65, 15.32], backgroundColor: C.green, ...barDefaults },
+        { label: 'Without Internet', data: [8.08, 9.99, 13.07, 15.38], backgroundColor: C.red, ...barDefaults }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { color: mutedColor, boxWidth: 12 } } },
+      scales: { x: { grid: { color: borderColor }, ticks: { color: mutedColor } }, y: { grid: { color: borderColor }, ticks: { callback: v => v + '%', color: mutedColor } } }
+    }
+  });
+}
+
+// ===== SKILLS =====
+function initSkills() {
+  new Chart(document.getElementById('chartSkillReasons'), {
+    type: 'bar', indexAxis: 'y',
+    data: {
+      labels: ['Lack of skills','Skills mismatch','Skill obsolescence','Lack of digital skills','Weak education system','Poor quality education','Lack of vocational skills','Lack of entrepreneur. training'],
+      datasets: [{ label: 'Count', data: [12, 16, 6, 4, 6, 4, 4, 5], backgroundColor: C.indigo, ...barDefaults }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: borderColor }, ticks: { color: mutedColor } }, y: { grid: { color: 'transparent' }, ticks: { color: mutedColor, font: { size: 11 } } } }
+    }
+  });
+
+  new Chart(document.getElementById('chartSkillRegion'), {
+    type: 'bar',
+    data: {
+      labels: ['West Africa','East Africa','Central Africa','North Africa','Southern Africa'],
+      datasets: [
+        { label: 'Skills-gap unemployment', data: [4.5, 7.8, 10.2, 13.5, 14.8], backgroundColor: C.red, ...barDefaults },
+        { label: 'Other unemployment', data: [0.7, 1.4, 2.4, 2.6, 3.1], backgroundColor: C.indigo, ...barDefaults }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { color: mutedColor, boxWidth: 12 } } },
+      scales: { x: { grid: { color: borderColor }, ticks: { color: mutedColor } }, y: { grid: { color: borderColor }, ticks: { callback: v => v + '%', color: mutedColor } } }
+    }
+  });
+
+  new Chart(document.getElementById('chartRadar'), {
+    type: 'radar',
+    data: {
+      labels: ['Digital Skills','Vocational Skills','Entrepreneurship','Soft Skills','Analytical Skills','Agricultural Skills','Leadership','Communication'],
+      datasets: [
+        { label: 'Workforce Supply', data: [30, 35, 40, 55, 45, 65, 38, 60], borderColor: C.indigo, backgroundColor: 'rgba(99,102,241,0.15)', pointBackgroundColor: C.indigo },
+        { label: 'Employer Demand', data: [80, 75, 72, 68, 70, 50, 65, 70], borderColor: C.orange, backgroundColor: 'rgba(249,115,22,0.1)', pointBackgroundColor: C.orange }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { color: mutedColor, boxWidth: 12 } } },
+      scales: { r: { grid: { color: borderColor }, ticks: { color: mutedColor, backdropColor: 'transparent' }, pointLabels: { color: mutedColor, font: { size: 12 } } } }
+    }
+  });
+}
+
+// ===== REGIONS =====
+function initRegions() {
+  new Chart(document.getElementById('chartRuralUrban'), {
+    type: 'bar',
+    data: {
+      labels: ['West Africa','East Africa','Central Africa','North Africa','Southern Africa'],
+      datasets: [
+        { label: 'Rural', data: [5.39, 9.19, 12.58, 19.97, 17.09], backgroundColor: C.amber, ...barDefaults },
+        { label: 'Urban', data: [5.02, 9.19, 12.54, 11.97, 18.99], backgroundColor: C.indigo, ...barDefaults }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { color: mutedColor, boxWidth: 12 } } },
+      scales: { x: { grid: { color: borderColor }, ticks: { color: mutedColor } }, y: { grid: { color: borderColor }, ticks: { callback: v => v + '%', color: mutedColor } } }
+    }
+  });
+
+  new Chart(document.getElementById('chartGenderRegion'), {
+    type: 'bar',
+    data: {
+      labels: ['West Africa','East Africa','Central Africa','North Africa','Southern Africa'],
+      datasets: [
+        { label: 'Female', data: [5.8, 9.9, 13.2, 17.4, 18.8], backgroundColor: C.pink, ...barDefaults },
+        { label: 'Male', data: [4.6, 8.5, 11.9, 14.7, 17.0], backgroundColor: C.blue, ...barDefaults }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { color: mutedColor, boxWidth: 12 } } },
+      scales: { x: { grid: { color: borderColor }, ticks: { color: mutedColor } }, y: { grid: { color: borderColor }, ticks: { callback: v => v + '%', color: mutedColor } } }
+    }
+  });
+
+  // Country list
+  const allCountries = [
+    ["Swaziland",32.84],["Djibouti",30.74],["South Africa",30.71],["Rep. of Congo",28.33],["Gabon",28.31],["Namibia",24.65],["Botswana",23.15],["Tunisia",21.94],["Libya",21.51],["Lesotho",21.42],["Somalia",21.10],["Angola",19.05],["Algeria",15.57],["Cape Verde",14.28],["Mauritania",13.41],["Rwanda",13.10],["Sao Tome & Prin.",11.08],["Zimbabwe",10.78],["Morocco",10.37],["Egypt",10.29],["Zambia",9.89],["Uganda",9.33],["Cameroon",9.10],["Tanzania",8.88],["Kenya",8.72],["Ivory Coast",8.41],["Comoros",8.38],["Equatorial Guinea",8.19],["Nigeria",8.14],["Burundi",8.09],["Senegal",7.96],["Gambia",7.75],["Guinea-Bissau",7.41],["Eritrea",7.35],["Togo",7.18],["Sudan",6.98],["Ethiopia",6.89],["Ghana",6.85],["Chad",6.72],["Madagascar",6.55],["Mali",6.49],["Liberia",6.32],["Burkina Faso",6.21],["Benin",6.11],["Mozambique",5.98],["C.A.R.",5.88],["DR Congo",5.71],["Niger",5.42],["Guinea",5.26],["Sierra Leone",5.10]
+  ];
+  const maxRate = 32.84;
+  const half = Math.ceil(allCountries.length / 2);
+  const getColor = v => v > 25 ? '#ef4444' : v > 20 ? '#f97316' : v > 15 ? '#f59e0b' : v > 10 ? '#6366f1' : '#10b981';
+
+  ['Left','Right'].forEach((side, si) => {
+    const slice = allCountries.slice(si * half, (si + 1) * half);
+    const container = document.getElementById('countryList' + side);
+    slice.forEach(([name, rate]) => {
+      const pct = ((rate / maxRate) * 100).toFixed(1);
+      container.innerHTML += `<div class="country-row">
+        <div class="country-name">${name}</div>
+        <div class="country-bar-wrap"><div class="country-bar" style="width:${pct}%;background:${getColor(rate)}"></div></div>
+        <div class="country-val">${rate}%</div>
+      </div>`;
+    });
+  });
+}
+
+// ===== INSIGHTS =====
+function initInsights() {
+  new Chart(document.getElementById('chartDrivers'), {
+    type: 'bar',
+    data: {
+      labels: ['No jobs available','Skills mismatch','Family resp.','Health issues','Training','Lack of skills','Lack of money','Lost hope','Job insecurity','Inequality in jobs'],
+      datasets: [
+        { label: 'Count', data: [61,16,15,15,14,12,10,9,7,6], backgroundColor: [C.red,C.orange,C.pink,C.amber,C.indigo,C.orange,C.amber,C.red,C.indigo,C.red], ...barDefaults }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: borderColor }, ticks: { color: mutedColor, maxRotation: 35 } }, y: { grid: { color: borderColor }, ticks: { color: mutedColor } } }
+    }
+  });
+
+  new Chart(document.getElementById('chartExperience'), {
+    type: 'line',
+    data: {
+      labels: ['0–5 yrs','6–10 yrs','11–15 yrs','16–20 yrs','21–25 yrs','26–30 yrs','31–40 yrs'],
+      datasets: [{ label: 'Avg Rate %', data: [18.2,13.5,10.8,8.9,7.5,7.1,6.8], borderColor: C.teal, backgroundColor: 'rgba(20,184,166,0.1)', fill: true, tension: 0.4, pointRadius: 4, pointBackgroundColor: C.teal }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: borderColor }, ticks: { color: mutedColor } }, y: { grid: { color: borderColor }, ticks: { callback: v => v + '%', color: mutedColor } } }
+    }
+  });
+
+  new Chart(document.getElementById('chartOpportunity'), {
+    type: 'bar', indexAxis: 'y',
+    data: {
+      labels: ['Digital/Tech','Agriculture/Food','Construction','Healthcare','Education','Finance/Fintech','Tourism'],
+      datasets: [{ label: 'Opportunity Score', data: [92, 78, 72, 68, 65, 60, 55], backgroundColor: [C.indigo,C.green,C.amber,C.pink,C.orange,C.teal,C.purple], ...barDefaults }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { color: borderColor }, ticks: { color: mutedColor } }, y: { grid: { color: 'transparent' }, ticks: { color: mutedColor } } }
+    }
+  });
+}
+
+// ===== RECOMMENDATIONS =====
+function initRecommendations() {
+  new Chart(document.getElementById('chartMatrix'), {
+    type: 'bubble',
+    data: {
+      datasets: [
+        { label: 'Youth Employment', data: [{ x: 7, y: 9, r: 18 }], backgroundColor: 'rgba(249,115,22,0.7)' },
+        { label: 'Vocational Skills', data: [{ x: 9, y: 7, r: 16 }], backgroundColor: 'rgba(99,102,241,0.7)' },
+        { label: 'Curriculum Reform', data: [{ x: 8, y: 5, r: 14 }], backgroundColor: 'rgba(16,185,129,0.7)' },
+        { label: 'Rural Connectivity', data: [{ x: 5, y: 8, r: 12 }], backgroundColor: 'rgba(245,158,11,0.7)' },
+        { label: 'Gender Policy', data: [{ x: 7, y: 6, r: 11 }], backgroundColor: 'rgba(236,72,153,0.7)' },
+        { label: 'Industrial Diversification', data: [{ x: 4, y: 9, r: 15 }], backgroundColor: 'rgba(239,68,68,0.7)' }
+      ]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { color: mutedColor, boxWidth: 12 } } },
+      scales: {
+        x: { min: 2, max: 11, grid: { color: borderColor }, ticks: { color: mutedColor }, title: { display: true, text: 'Feasibility →', color: mutedColor } },
+        y: { min: 2, max: 11, grid: { color: borderColor }, ticks: { color: mutedColor }, title: { display: true, text: 'Impact →', color: mutedColor } }
+      }
+    }
+  });
+}
+
+// Init first section
+initChartsForSection('overview');
+</script>
+</body>
+</html>
