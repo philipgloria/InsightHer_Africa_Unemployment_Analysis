@@ -1,4 +1,4 @@
-# AI-Driven Skills Gap Analysis: Understanding Unemployment in Africa
+# 🌍 AI-Driven Skills Gap Analysis: Understanding Unemployment in Africa
 
 <div align="center">
 
